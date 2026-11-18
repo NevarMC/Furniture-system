@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Larkspur Showroom</title>
+<style>
+  :root {
+    --bg: #141c1f; --panel: #1d272b; --line: #2d3b40; --text: #e8eeef; --muted: #a3b2b6;
+    --accent: #7fc8b2; --accent-ink: #0d1f1a; --teal: #6e9aa3; --ok: #6fd08c; --warn: #f0b84a;
+    --info: #8fa8ff; --bad: #ff7b7b; --fs: 16px;
+  }
+  body.contrast { --bg:#000; --panel:#0b0b0b; --line:#fff; --text:#fff; --muted:#e6e6e6; --accent:#ffe600; --accent-ink:#000; }
+  * { box-sizing: border-box; }
+  html { font-size: var(--fs); }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: "Segoe UI", system-ui, sans-serif; line-height:1.5; }
+  button, input, select { font: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display:none !important; }
+
+  /* Accessibility bar */
+  .a11y { display:flex; gap:.5rem; justify-content:flex-end; padding:.5rem 1rem; border-bottom:1px solid var(--line); }
+  .a11y button { background:transparent; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:.25rem .7rem; cursor:pointer; }
+
+  /* Buttons */
+  .btn { background:#fff7ef; color:#1b1b1b; border:0; border-radius:8px; padding:.7rem 1.4rem; font-weight:700; cursor:pointer; }
+  .btn.primary { background:var(--accent); color:var(--accent-ink); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .link { background:none; border:0; color:#8cc4ff; cursor:pointer; padding:0; text-decoration:underline; }
+
+  /* Auth */
+  #auth { min-height:calc(100vh - 3rem); display:grid; place-items:center; padding:1rem;
+    background: linear-gradient(rgba(20,28,31,.55), rgba(20,28,31,.9)), repeating-linear-gradient(90deg,#3b2a1e 0 40px,#4a3626 40px 44px); }
+  .auth-card { width:min(380px,100%); background:rgba(40,46,52,.92); border-radius:12px; overflow:hidden; border:1px solid var(--line); }
+  .auth-card h1 { margin:0; padding:1rem; text-align:center; background:var(--teal); color:#10262b; font-size:1.7rem; }
+  .auth-card form { padding:1.5rem; display:grid; gap:1rem; }
+  label { font-size:.85rem; font-weight:600; display:grid; gap:.25rem; }
+  input, select { background:transparent; color:inherit; border:0; border-bottom:2px solid var(--muted); padding:.45rem .1rem; }
+  select option { color:#000; }
+  .err { color:var(--bad); font-size:.85rem; min-height:1.2em; margin:0; }
+
+  /* Catalog */
+  main { max-width:760px; margin:0 auto; padding:1.5rem 1rem 3rem; }
+  .top { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; }
+  .top h1 { margin:0; font-size:2.2rem; letter-spacing:-.02em; }
+  .top p { margin:.2rem 0 0; color:var(--muted); font-size:.9rem; }
+  .cart-btn { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:.5rem .9rem; cursor:pointer; }
+  .tools { display:flex; justify-content:space-between; gap:.75rem; flex-wrap:wrap; margin:1.2rem 0 .6rem; }
+  .chips { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .chip { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:999px; padding:.25rem .85rem; cursor:pointer; }
+  .chip[aria-pressed="true"] { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:700; }
+  .right { display:flex; gap:.6rem; align-items:end; }
+  .right input, .right select { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:.35rem .6rem; }
+  .count { color:var(--muted); font-size:.85rem; margin:.3rem 0 .6rem; }
+  .item { width:100%; display:flex; align-items:center; gap:1rem; text-align:left; background:var(--panel); color:inherit;
+    border:1px solid var(--line); border-radius:10px; padding:.8rem 1rem; margin-bottom:.6rem; cursor:pointer; }
+  .item.sold { opacity:.6; }
+  .thumb { width:56px; height:56px; border-radius:8px; background:#26343a; display:grid; place-items:center; font-size:1.8rem; flex:none; }
+  .info { flex:1; min-width:0; }
+  .info strong { display:block; }
+  .info small { color:var(--muted); }
+  .price { text-align:right; font-weight:800; font-size:1.2rem; }
+  .price small { display:block; font-weight:400; font-size:.7rem; color:var(--muted); }
+  .tag { display:inline-block; font-size:.72rem; font-weight:700; border-radius:4px; padding:.05rem .5rem; margin-top:.25rem; border:1px solid currentColor; }
+  .instock { color:var(--ok); } .low { color:var(--warn); } .backorder { color:var(--info); } .sold { }
+  .tag.sold { color:var(--bad); }
+
+  /* Dialogs */
+  dialog { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:12px; width:min(460px,94vw); padding:1.2rem; }
+  dialog::backdrop { background:rgba(0,0,0,.7); }
+  .dhead { display:flex; align-items:center; gap:.6rem; margin-bottom:1rem; }
+  .dhead h2 { margin:0; font-size:1.4rem; flex:1; }
+  .x { background:none; border:0; color:#ff5b5b; font-size:1.6rem; cursor:pointer; line-height:1; }
+  .big { height:150px; border-radius:10px; background:#26343a; display:grid; place-items:center; font-size:4.5rem; transition: transform .2s; }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:.3rem 1rem; margin:1rem 0; }
+  dt { color:var(--muted); } dd { margin:0; }
+  .row { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+  .cartline { background:#3b4f55; border-radius:8px; padding:.8rem; display:flex; gap:.8rem; align-items:center; margin-bottom:.6rem; }
+  .qty { display:flex; gap:.4rem; align-items:center; }
+  .qty button { width:2rem; height:2rem; border-radius:6px; border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; }
+  .total { text-align:right; font-weight:700; margin:1rem 0 .6rem; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:.8rem; }
+  .card { background:#fff; color:#111; border-radius:8px; padding:.9rem; display:grid; gap:.6rem; }
+  .card h3 { margin:0; }
+  .card input { border-bottom:2px solid #555; color:#111; }
+  .ok { text-align:center; padding:1rem 0; }
+  .check { width:90px; height:90px; border-radius:50%; background:var(--ok); color:#06240f; font-size:3.2rem; display:grid; place-items:center; margin:0 auto 1rem; }
+  @media (max-width:520px){ .cols{grid-template-columns:1fr;} }
+  @media (prefers-reduced-motion:reduce){ * { transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="a11y" role="group" aria-label="Accessibility settings">
+  <button id="smaller" aria-label="Make text smaller">A−</button>
+  <button id="larger" aria-label="Make text larger">A+</button>
+  <button id="contrast" aria-pressed="false">High contrast</button>
+</div>
+
+<!-- Sign up / Log in -->
+<section id="auth">
+  <div class="auth-card">
+    <h1 id="authTitle">Log in</h1>
+    <form id="authForm" novalidate>
+      <label>Username <input id="user" autocomplete="username"></label>
+      <label id="emailRow" hidden>Email <input id="email" type="email" autocomplete="email"></label>
+      <label>Password <input id="pass" type="password" autocomplete="current-password"></label>
+      <label id="confRow" hidden>Confirm password <input id="conf" type="password"></label>
+      <button type="button" class="link" id="forgot">Forgot password?</button>
+      <p class="err" id="authErr" role="alert"></p>
+      <button class="btn" id="authBtn">Log in</button>
+      <button type="button" class="link" id="toggleAuth">New here? Create an account</button>
+    </form>
+  </div>
+</section>
+
+<!-- Catalog -->
+<main id="shop" hidden>
+  <div class="top">
+    <div>
+      <h1>Larkspur Showroom</h1>
+      <p>Browse furniture, filter by availability, or sort by price.</p>
+    </div>
+    <button class="cart-btn" id="openCart">🛒 Cart (<span id="cartCount">0</span>)</button>
+  </div>
+  <div class="tools">
+    <div class="chips" id="chips" role="group" aria-label="Filter by availability"></div>
+    <div class="right">
+      <label>Search <input id="search" type="search" placeholder="e.g. queen bed"></label>
+      <label>Sort
+        <select id="sort">
+          <option value="featured">Featured</option>
+          <option value="low">Price: low to high</option>
+          <option value="high">Price: high to low</option>
+        </select>
+      </label>
+      <label>Units
+        <select id="units"><option value="in">Inches</option><option value="cm">Centimeters</option></select>
+      </label>
+    </div>
+  </div>
+  <p class="count" id="count" aria-live="polite"></p>
+  <div id="list"></div>
+</main>
+
+<!-- Product detail -->
+<dialog id="detail" aria-labelledby="dName">
+  <div class="dhead"><h2 id="dName"></h2><button class="x" data-close aria-label="Close">✕</button></div>
+  <div class="big" id="dImg" aria-hidden="true"></div>
+  <dl>
+    <dt>Product no.</dt><dd id="dNo"></dd>
+    <dt>Price</dt><dd id="dPrice"></dd>
+    <dt>Size</dt><dd id="dSize"></dd>
+    <dt>Material</dt><dd id="dMat"></dd>
+    <dt>Availability</dt><dd id="dStatus"></dd>
+  </dl>
+  <div class="row">
+    <button class="btn" id="zoom" type="button">Zoom preview</button>
+    <button class="btn primary" id="addBtn" type="button">Add to cart</button>
+  </div>
+</dialog>
+
+<!-- Cart -->
+<dialog id="cart" aria-labelledby="cartTitle">
+  <div class="dhead"><button class="x" data-close aria-label="Close cart">✕</button><h2 id="cartTitle">Shopping cart 🛒</h2></div>
+  <div id="cartLines"></div>
+  <p class="total">Total: <span id="cartTotal">$0</span></p>
+  <div style="text-align:right"><button class="btn" id="toCheckout">Proceed to checkout</button></div>
+</dialog>
+
+<!-- Checkout -->
+<dialog id="checkout" aria-labelledby="coTitle">
+  <div class="dhead"><button class="x" data-close aria-label="Close checkout">✕</button><h2 id="coTitle">Checkout</h2></div>
+  <form id="coForm" novalidate>
+    <div class="cols">
+      <div class="card"><h3>Shipping</h3>
+        <label>Name <input id="sName" autocomplete="name"></label>
+        <label>Address <input id="sAddr" autocomplete="street-address"></label>
+        <label>Zip code <input id="sZip" inputmode="numeric" autocomplete="postal-code"></label>
+        <label>State <input id="sState" autocomplete="address-level1"></label>
+      </div>
+      <div class="card"><h3>Payment method</h3>
+        <label>Name <input id="pName" autocomplete="cc-name"></label>
+        <label>Billing address <input id="pAddr"></label>
+        <label>Card number <input id="pCard" inputmode="numeric" autocomplete="cc-number"></label>
+        <label>Expiration date <input id="pExp" placeholder="MM/YY" autocomplete="cc-exp"></label>
+      </div>
+    </div>
+    <p class="err" id="coErr" role="alert"></p>
+    <p class="total">Order total: <span id="coTotal"></span></p>
+    <div style="text-align:right"><button class="btn">Place your order</button></div>
+  </form>
+</dialog>
+
+<!-- Confirmation -->
+<dialog id="done" aria-labelledby="doneTitle">
+  <div class="ok">
+    <div class="check" aria-hidden="true">✓</div>
+    <h2 id="doneTitle">Order placed!</h2>
+    <p id="doneMsg"></p>
+    <button class="btn primary" data-close>Keep shopping</button>
+  </div>
+</dialog>
+
+<script>
+  /* ---------- Data (placeholder catalog) ---------- */
+  const ITEMS = [
+    { id:"LS-1001", name:"Halden 3-seat sofa", desc:"Oat bouclé, solid beech legs", price:1249, status:"instock", icon:"🛋️", mat:"Oat bouclé, beech", dims:[84,36,33] },
+    { id:"LS-1002", name:"Morrow lounge chair", desc:"Moss velvet, swivel base", price:489, status:"low", left:3, icon:"🪑", mat:"Moss velvet", dims:[30,31,32] },
+    { id:"LS-1003", name:"Kessel dining table", desc:"Seats six, oiled oak", price:899, status:"instock", icon:"🍽️", mat:"Oiled oak", dims:[72,36,30] },
+    { id:"LS-1004", name:"Orrin queen bed frame", desc:"Linen headboard, slatted base", price:1099, status:"backorder", ship:"Dec 12", icon:"🛏️", mat:"Linen, pine slats", dims:[80,60,48] },
+    { id:"LS-1005", name:"Tavi floor lamp", desc:"Brass arm, dimmable", price:139, status:"instock", icon:"💡", mat:"Brass", dims:[14,14,62] },
+    { id:"LS-1006", name:"Sable media console", desc:"Cane doors, cable ports", price:749, status:"instock", icon:"📺", mat:"Cane, ash", dims:[66,18,24] },
+    { id:"LS-1007", name:"Brisk bookshelf", desc:"Five tiers, walnut veneer", price:329, status:"low", left:2, icon:"📚", mat:"Walnut veneer", dims:[32,12,72] },
+    { id:"LS-1008", name:"Wick stool set", desc:"Set of two, ash wood", price:159, status:"backorder", ship:"Jan 8", icon:"🪑", mat:"Ash", dims:[16,16,24] },
+    { id:"LS-1009", name:"Dune daybed", desc:"Sage fabric, bolster included", price:1599, status:"backorder", ship:"Feb 2", icon:"🛋️", mat:"Sage fabric", dims:[78,38,30] },
+    { id:"LS-1010", name:"Pell side table", desc:"Powder-coated steel, round top", price:119, status:"sold", icon:"🪵", mat:"Steel", dims:[18,18,22] }
+  ];
+  const FILTERS = [["all","All"],["instock","In stock"],["low","Low stock"],["backorder","Backorder"],["sold","Sold out"]];
+
+  let filter = "all", cart = {}, current = null, signup = false, zoomed = false;
+  const $ = id => document.getElementById(id);
+  const money = n => "$" + n.toLocaleString("en-US");
+
+  function statusText(i) {
+    if (i.status === "instock") return "In stock";
+    if (i.status === "low") return "Only " + i.left + " left";
+    if (i.status === "backorder") return "Ships " + i.ship;
+    return "Sold out";
+  }
+  const tag = i => `<span class="tag ${i.status}">${statusText(i)}</span>`;
+
+  /* ---------- Accessibility ---------- */
+  let fs = 16;
+  $("larger").onclick = () => { fs = Math.min(24, fs + 2); document.documentElement.style.setProperty("--fs", fs + "px"); };
+  $("smaller").onclick = () => { fs = Math.max(12, fs - 2); document.documentElement.style.setProperty("--fs", fs + "px"); };
+  $("contrast").onclick = e => {
+    const on = document.body.classList.toggle("contrast");
+    e.target.setAttribute("aria-pressed", on);
+  };
+
+  /* ---------- Auth ---------- */
+  function setAuthMode(isSignup) {
+    signup = isSignup;
+    $("authTitle").textContent = isSignup ? "Create an account" : "Log in";
+    $("authBtn").textContent = isSignup ? "Sign up" : "Log in";
+    $("emailRow").hidden = $("confRow").hidden = !isSignup;
+    $("forgot").hidden = isSignup;
+    $("toggleAuth").textContent = isSignup ? "Already have an account? Log in" : "New here? Create an account";
+    $("authErr").textContent = "";
+  }
+  $("toggleAuth").onclick = () => setAuthMode(!signup);
+  $("forgot").onclick = () => { $("authErr").textContent = "Password reset is not part of this demo."; };
+  $("authForm").onsubmit = e => {
+    e.preventDefault();
+    const u = $("user").value.trim(), p = $("pass").value;
+    if (!u || !p) return $("authErr").textContent = "Enter your username and password.";
+    if (signup) {
+      if (!/^\S+@\S+\.\S+$/.test($("email").value)) return $("authErr").textContent = "Enter a valid email address.";
+      if (p.length < 6) return $("authErr").textContent = "Use a password with at least 6 characters.";
+      if (p !== $("conf").value) return $("authErr").textContent = "Passwords don’t match.";
+    }
+    $("auth").hidden = true; $("shop").hidden = false; render();
+  };
+
+  /* ---------- Catalog ---------- */
+  function renderChips() {
+    $("chips").innerHTML = FILTERS.map(([k, l]) =>
+      `<button class="chip" data-f="${k}" aria-pressed="${k === filter}">${l}</button>`).join("");
+    $("chips").querySelectorAll(".chip").forEach(b => b.onclick = () => { filter = b.dataset.f; render(); });
+  }
+  function render() {
+    renderChips();
+    const q = $("search").value.trim().toLowerCase(), s = $("sort").value;
+    let list = ITEMS.filter(i => (filter === "all" || i.status === filter) &&
+      (!q || (i.name + " " + i.desc).toLowerCase().includes(q)));
+    if (s === "low") list.sort((a, b) => a.price - b.price);
+    if (s === "high") list.sort((a, b) => b.price - a.price);
+    $("count").textContent = list.length + (list.length === 1 ? " item" : " items");
+    $("list").innerHTML = list.length ? list.map(i => `
+      <button class="item ${i.status === "sold" ? "sold" : ""}" data-id="${i.id}">
+        <span class="thumb" aria-hidden="true">${i.icon}</span>
+        <span class="info"><strong>${i.name}</strong><small>${i.desc}</small>${tag(i)}</span>
+        <span class="price">${money(i.price)}<small>${i.status === "sold" ? "Not available" : "Free delivery over $500"}</small></span>
+      </button>`).join("") : "<p>No items match. Try a different filter or search.</p>";
+    $("list").querySelectorAll(".item").forEach(b => b.onclick = () => openDetail(b.dataset.id));
+    $("cartCount").textContent = Object.values(cart).reduce((a, n) => a + n, 0);
+  }
+  ["search", "sort", "units"].forEach(id => $(id).addEventListener("input", () => { render(); if (id === "units" && current) fillSize(); }));
+
+  /* ---------- Detail ---------- */
+  function fillSize() {
+    const u = $("units").value, f = u === "cm" ? 2.54 : 1;
+    $("dSize").textContent = current.dims.map(d => Math.round(d * f)).join(" × ") + " " + u + " (W × D × H)";
+  }
+  function openDetail(id) {
+    current = ITEMS.find(i => i.id === id); zoomed = false;
+    $("dImg").style.transform = "scale(1)";
+    $("dName").textContent = current.name; $("dImg").textContent = current.icon;
+    $("dNo").textContent = current.id; $("dPrice").textContent = money(current.price);
+    $("dMat").textContent = current.mat; $("dStatus").innerHTML = tag(current);
+    fillSize();
+    const sold = current.status === "sold";
+    $("addBtn").disabled = sold;
+    $("addBtn").textContent = sold ? "Unavailable" : "Add to cart";
+    $("detail").showModal();
+  }
+  $("zoom").onclick = () => { zoomed = !zoomed; $("dImg").style.transform = zoomed ? "scale(1.4)" : "scale(1)"; };
+  $("addBtn").onclick = () => { cart[current.id] = (cart[current.id] || 0) + 1; $("detail").close(); render(); openCart(); };
+
+  /* ---------- Cart ---------- */
+  const total = () => Object.entries(cart).reduce((t, [id, n]) => t + ITEMS.find(i => i.id === id).price * n, 0);
+  function openCart() { renderCart(); $("cart").showModal(); }
+  function renderCart() {
+    const ids = Object.keys(cart);
+    $("cartLines").innerHTML = ids.length ? ids.map(id => {
+      const i = ITEMS.find(x => x.id === id);
+      return `<div class="cartline">
+        <span class="thumb" aria-hidden="true">${i.icon}</span>
+        <span class="info"><strong>${i.name}</strong>${tag(i)}</span>
+        <span class="qty">
+          <button data-a="minus" data-id="${id}" aria-label="Remove one ${i.name}">−</button>
+          <span aria-live="polite">${cart[id]}</span>
+          <button data-a="plus" data-id="${id}" aria-label="Add one ${i.name}">+</button>
+        </span>
+        <strong>${money(i.price * cart[id])}</strong>
+      </div>`;
+    }).join("") : "<p>Your cart is empty. Pick a piece from the catalog to start.</p>";
+    $("cartLines").querySelectorAll("button").forEach(b => b.onclick = () => {
+      const id = b.dataset.id;
+      cart[id] += b.dataset.a === "plus" ? 1 : -1;
+      if (cart[id] <= 0) delete cart[id];
+      renderCart(); render();
+    });
+    $("cartTotal").textContent = money(total());
+    $("toCheckout").disabled = !ids.length;
+  }
+  $("openCart").onclick = openCart;
+  $("toCheckout").onclick = () => { $("cart").close(); $("coTotal").textContent = money(total()); $("coErr").textContent = ""; $("checkout").showModal(); };
+
+  /* ---------- Checkout ---------- */
+  $("coForm").onsubmit = e => {
+    e.preventDefault();
+    const ids = ["sName","sAddr","sZip","sState","pName","pAddr","pCard","pExp"];
+    if (ids.some(id => !$(id).value.trim())) return $("coErr").textContent = "Fill in every shipping and payment field.";
+    if (!/^\d{5}$/.test($("sZip").value.trim())) return $("coErr").textContent = "Enter a 5-digit zip code.";
+    if (!/^\d{13,19}$/.test($("pCard").value.replace(/\s/g, ""))) return $("coErr").textContent = "Enter a valid card number (digits only).";
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test($("pExp").value.trim())) return $("coErr").textContent = "Enter the expiration date as MM/YY.";
+    const n = "LS-" + Math.floor(100000 + Math.random() * 900000);
+    $("doneMsg").textContent = "Order " + n + " for " + money(total()) + " is confirmed. A receipt will go to your email.";
+    cart = {}; $("coForm").reset(); $("checkout").close(); render(); $("done").showModal();
+  };
+
+  /* ---------- Close buttons ---------- */
+  document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest("dialog").close());
+
+  setAuthMode(false);
+</script>
+</body>
+</html>
