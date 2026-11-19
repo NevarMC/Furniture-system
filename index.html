@@ -22,6 +22,8 @@
   .a11y { display:flex; gap:.5rem; justify-content:flex-end; padding:.5rem 1rem; border-bottom:1px solid var(--line); }
   .a11y button { background:transparent; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:.25rem .7rem; cursor:pointer; }
 
+  .a11y select { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:.25rem .5rem; }
+
   /* Buttons */
   .btn { background:#fff7ef; color:#1b1b1b; border:0; border-radius:8px; padding:.7rem 1.4rem; font-weight:700; cursor:pointer; }
   .btn.primary { background:var(--accent); color:var(--accent-ink); }
@@ -95,6 +97,7 @@
   <button id="smaller" aria-label="Make text smaller">A−</button>
   <button id="larger" aria-label="Make text larger">A+</button>
   <button id="contrast" aria-pressed="false">High contrast</button>
+  <select id="lang" aria-label="Language"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="zh">中文</option></select>
 </div>
 
 <!-- Sign up / Log in -->
@@ -121,7 +124,7 @@
       <h1>Larkspur Showroom</h1>
       <p>Browse furniture, filter by availability, or sort by price.</p>
     </div>
-    <button class="cart-btn" id="openCart">🛒 Cart (<span id="cartCount">0</span>)</button>
+    <button class="cart-btn" id="openCart">🛒 <span>Cart</span> (<span id="cartCount">0</span>)</button>
   </div>
   <div class="tools">
     <div class="chips" id="chips" role="group" aria-label="Filter by availability"></div>
@@ -222,11 +225,143 @@
   const $ = id => document.getElementById(id);
   const money = n => "$" + n.toLocaleString("en-US");
 
+  /* ---------- Translations: [English, Español, Français, 中文] ---------- */
+  const ROWS = [
+    ["High contrast","Alto contraste","Contraste élevé","高对比度"],
+    ["Log in","Iniciar sesión","Connexion","登录"],
+    ["Create an account","Crear una cuenta","Créer un compte","创建账户"],
+    ["Username","Usuario","Nom d’utilisateur","用户名"],
+    ["Email","Correo electrónico","E-mail","电子邮件"],
+    ["Password","Contraseña","Mot de passe","密码"],
+    ["Confirm password","Confirmar contraseña","Confirmer le mot de passe","确认密码"],
+    ["Forgot password?","¿Olvidó su contraseña?","Mot de passe oublié ?","忘记密码？"],
+    ["Sign up","Registrarse","S’inscrire","注册"],
+    ["New here? Create an account","¿Nuevo? Cree una cuenta","Nouveau ? Créez un compte","新用户？创建账户"],
+    ["Already have an account? Log in","¿Ya tiene cuenta? Inicie sesión","Déjà un compte ? Connectez-vous","已有账户？登录"],
+    ["Browse furniture, filter by availability, or sort by price.","Explore muebles, filtre por disponibilidad u ordene por precio.","Parcourez les meubles, filtrez par disponibilité ou triez par prix.","浏览家具，按库存筛选或按价格排序。"],
+    ["Cart","Carrito","Panier","购物车"],
+    ["All","Todos","Tous","全部"],
+    ["In stock","En existencia","En stock","有货"],
+    ["Low stock","Pocas unidades","Stock faible","库存紧张"],
+    ["Backorder","Por encargo","Précommande","预订"],
+    ["Sold out","Agotado","Épuisé","售罄"],
+    ["Search","Buscar","Rechercher","搜索"],
+    ["Sort","Ordenar","Trier","排序"],
+    ["Units","Unidades","Unités","单位"],
+    ["Inches","Pulgadas","Pouces","英寸"],
+    ["Centimeters","Centímetros","Centimètres","厘米"],
+    ["Featured","Destacados","En vedette","推荐"],
+    ["Price: low to high","Precio: menor a mayor","Prix : croissant","价格：从低到高"],
+    ["Price: high to low","Precio: mayor a menor","Prix : décroissant","价格：从高到低"],
+    ["Product no.","N.º de producto","N° de produit","产品编号"],
+    ["Price","Precio","Prix","价格"],
+    ["Size","Tamaño","Dimensions","尺寸"],
+    ["Material","Material","Matériau","材质"],
+    ["Availability","Disponibilidad","Disponibilité","库存状态"],
+    ["Zoom preview","Ampliar vista","Agrandir l’aperçu","放大预览"],
+    ["Add to cart","Agregar al carrito","Ajouter au panier","加入购物车"],
+    ["Unavailable","No disponible","Indisponible","暂不可用"],
+    ["Shopping cart 🛒","Carrito de compras 🛒","Panier 🛒","购物车 🛒"],
+    ["Total:","Total:","Total :","总计："],
+    ["Proceed to checkout","Ir a pagar","Passer à la caisse","去结算"],
+    ["Checkout","Pago","Paiement","结算"],
+    ["Shipping","Envío","Livraison","配送"],
+    ["Payment method","Método de pago","Mode de paiement","付款方式"],
+    ["Name","Nombre","Nom","姓名"],
+    ["Address","Dirección","Adresse","地址"],
+    ["Zip code","Código postal","Code postal","邮政编码"],
+    ["State","Estado","État","州"],
+    ["Billing address","Dirección de facturación","Adresse de facturation","账单地址"],
+    ["Card number","Número de tarjeta","Numéro de carte","卡号"],
+    ["Expiration date","Fecha de vencimiento","Date d’expiration","有效期"],
+    ["Place your order","Realizar el pedido","Passer la commande","提交订单"],
+    ["Order total:","Total del pedido:","Total de la commande :","订单总额："],
+    ["Order placed!","¡Pedido realizado!","Commande passée !","订单已提交！"],
+    ["Keep shopping","Seguir comprando","Continuer vos achats","继续购物"],
+    ["Close","Cerrar","Fermer","关闭"],
+    ["Close cart","Cerrar carrito","Fermer le panier","关闭购物车"],
+    ["Close checkout","Cerrar pago","Fermer le paiement","关闭结算"],
+    ["Make text smaller","Reducir texto","Réduire le texte","缩小文字"],
+    ["Make text larger","Aumentar texto","Agrandir le texte","放大文字"],
+    ["Accessibility settings","Accesibilidad","Accessibilité","无障碍设置"],
+    ["Filter by availability","Filtrar por disponibilidad","Filtrer par disponibilité","按库存筛选"],
+    ["Language","Idioma","Langue","语言"],
+    ["e.g. queen bed","p. ej., cama queen","p. ex. lit queen","例如：大号床"],
+    ["Enter your username and password.","Ingrese su usuario y contraseña.","Saisissez votre nom d’utilisateur et mot de passe.","请输入用户名和密码。"],
+    ["Enter a valid email address.","Ingrese un correo válido.","Saisissez une adresse e-mail valide.","请输入有效的电子邮件地址。"],
+    ["Use a password with at least 6 characters.","Use una contraseña de al menos 6 caracteres.","Utilisez au moins 6 caractères.","密码至少需要6个字符。"],
+    ["Passwords don’t match.","Las contraseñas no coinciden.","Les mots de passe ne correspondent pas.","两次输入的密码不一致。"],
+    ["Password reset is not part of this demo.","El restablecimiento de contraseña no está en esta demo.","La réinitialisation du mot de passe n’est pas incluse dans cette démo.","此演示不包含重置密码功能。"],
+    ["Fill in every shipping and payment field.","Complete todos los campos de envío y pago.","Remplissez tous les champs de livraison et de paiement.","请填写所有配送和付款信息。"],
+    ["Enter a 5-digit zip code.","Ingrese un código postal de 5 dígitos.","Saisissez un code postal à 5 chiffres.","请输入5位邮政编码。"],
+    ["Enter a valid card number (digits only).","Ingrese un número de tarjeta válido (solo dígitos).","Saisissez un numéro de carte valide (chiffres uniquement).","请输入有效的卡号（仅数字）。"],
+    ["Enter the expiration date as MM/YY.","Ingrese el vencimiento como MM/AA.","Saisissez la date d’expiration au format MM/AA.","请按 MM/YY 格式输入有效期。"],
+    ["No items match. Try a different filter or search.","Sin resultados. Pruebe otro filtro o búsqueda.","Aucun résultat. Essayez un autre filtre ou une autre recherche.","没有匹配的商品，请换个筛选或搜索词。"],
+    ["Your cart is empty. Pick a piece from the catalog to start.","Su carrito está vacío. Elija un mueble del catálogo.","Votre panier est vide. Choisissez un meuble dans le catalogue.","购物车为空，请从目录中选择商品。"],
+    ["Not available","No disponible","Indisponible","暂不可购买"],
+    ["Free delivery over $500","Envío gratis desde $500","Livraison offerte dès 500 $","满$500免运费"],
+    ["Only {n} left","Solo quedan {n}","Plus que {n}","仅剩 {n} 件"],
+    ["Ships {d}","Envío el {d}","Expédié le {d}","{d}发货"],
+    ["Dec 12","12 dic","12 déc.","12月12日"],
+    ["Jan 8","8 ene","8 janv.","1月8日"],
+    ["Feb 2","2 feb","2 févr.","2月2日"],
+    ["item","artículo","article","件商品"],
+    ["items","artículos","articles","件商品"],
+    ["(W × D × H)","(An. × Pr. × Al.)","(L × P × H)","(宽 × 深 × 高)"],
+    ["Remove one","Quitar uno","Retirer un","减少一件"],
+    ["Add one","Agregar uno","Ajouter un","增加一件"],
+    ["Order {n} for {total} is confirmed. A receipt will go to your email.","El pedido {n} por {total} está confirmado. Recibirá un recibo por correo.","La commande {n} de {total} est confirmée. Un reçu sera envoyé par e-mail.","订单 {n}（{total}）已确认，收据将发送到您的邮箱。"],
+    ["Oat bouclé, solid beech legs","Bouclé avena, patas de haya maciza","Bouclé avoine, pieds en hêtre massif","燕麦色毛圈布，实木榉木腿"],
+    ["Moss velvet, swivel base","Terciopelo musgo, base giratoria","Velours mousse, base pivotante","苔绿色天鹅绒，旋转底座"],
+    ["Seats six, oiled oak","Para seis, roble aceitado","6 places, chêne huilé","可坐六人，油润橡木"],
+    ["Linen headboard, slatted base","Cabecero de lino, base de listones","Tête de lit en lin, sommier à lattes","亚麻床头，板条床架"],
+    ["Brass arm, dimmable","Brazo de latón, regulable","Bras en laiton, variateur","黄铜灯臂，可调光"],
+    ["Cane doors, cable ports","Puertas de ratán, pasacables","Portes en rotin, passe-câbles","藤编门，带走线孔"],
+    ["Five tiers, walnut veneer","Cinco niveles, chapa de nogal","Cinq niveaux, placage noyer","五层，胡桃木饰面"],
+    ["Set of two, ash wood","Juego de dos, madera de fresno","Lot de deux, bois de frêne","两件套，白蜡木"],
+    ["Sage fabric, bolster included","Tela salvia, cojín cilíndrico incluido","Tissu sauge, traversin inclus","鼠尾草绿布面，含抱枕"],
+    ["Powder-coated steel, round top","Acero pintado, tapa redonda","Acier laqué, plateau rond","粉末涂层钢，圆形桌面"],
+    ["Oat bouclé, beech","Bouclé avena, haya","Bouclé avoine, hêtre","燕麦色毛圈布，榉木"],
+    ["Moss velvet","Terciopelo musgo","Velours mousse","苔绿色天鹅绒"],
+    ["Oiled oak","Roble aceitado","Chêne huilé","油润橡木"],
+    ["Linen, pine slats","Lino, listones de pino","Lin, lattes en pin","亚麻，松木板条"],
+    ["Brass","Latón","Laiton","黄铜"],
+    ["Cane, ash","Ratán, fresno","Rotin, frêne","藤，白蜡木"],
+    ["Walnut veneer","Chapa de nogal","Placage noyer","胡桃木饰面"],
+    ["Ash","Fresno","Frêne","白蜡木"],
+    ["Sage fabric","Tela salvia","Tissu sauge","鼠尾草绿布面"],
+    ["Steel","Acero","Acier","钢"]
+  ];
+  const D = { es:{}, fr:{}, zh:{} };
+  ROWS.forEach(r => { D.es[r[0]] = r[1]; D.fr[r[0]] = r[2]; D.zh[r[0]] = r[3]; });
+  let lang = "en";
+  const t = s => lang === "en" ? s : ((D[lang] || {})[s] || s);
+
+  // Translates every static piece of text on the page (and aria-labels/placeholders)
+  function translatePage() {
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : lang;
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = w.nextNode())) {
+      if (n.parentNode.tagName === "SCRIPT") continue;
+      if (n.__en === undefined) n.__en = D.es[n.nodeValue.trim()] !== undefined ? n.nodeValue : null;
+      if (n.__en) { const k = n.__en.trim(); n.nodeValue = n.__en.replace(k, t(k)); }
+    }
+    document.querySelectorAll("[aria-label],[placeholder]").forEach(el => {
+      ["aria-label", "placeholder"].forEach(a => {
+        if (!el.hasAttribute(a)) return;
+        el.__a = el.__a || {};
+        if (el.__a[a] === undefined) el.__a[a] = el.getAttribute(a);
+        el.setAttribute(a, t(el.__a[a]));
+      });
+    });
+  }
+
   function statusText(i) {
-    if (i.status === "instock") return "In stock";
-    if (i.status === "low") return "Only " + i.left + " left";
-    if (i.status === "backorder") return "Ships " + i.ship;
-    return "Sold out";
+    if (i.status === "instock") return t("In stock");
+    if (i.status === "low") return t("Only {n} left").replace("{n}", i.left);
+    if (i.status === "backorder") return t("Ships {d}").replace("{d}", t(i.ship));
+    return t("Sold out");
   }
   const tag = i => `<span class="tag ${i.status}">${statusText(i)}</span>`;
 
@@ -242,23 +377,23 @@
   /* ---------- Auth ---------- */
   function setAuthMode(isSignup) {
     signup = isSignup;
-    $("authTitle").textContent = isSignup ? "Create an account" : "Log in";
-    $("authBtn").textContent = isSignup ? "Sign up" : "Log in";
+    $("authTitle").textContent = t(isSignup ? "Create an account" : "Log in");
+    $("authBtn").textContent = t(isSignup ? "Sign up" : "Log in");
     $("emailRow").hidden = $("confRow").hidden = !isSignup;
     $("forgot").hidden = isSignup;
-    $("toggleAuth").textContent = isSignup ? "Already have an account? Log in" : "New here? Create an account";
+    $("toggleAuth").textContent = t(isSignup ? "Already have an account? Log in" : "New here? Create an account");
     $("authErr").textContent = "";
   }
   $("toggleAuth").onclick = () => setAuthMode(!signup);
-  $("forgot").onclick = () => { $("authErr").textContent = "Password reset is not part of this demo."; };
+  $("forgot").onclick = () => { $("authErr").textContent = t("Password reset is not part of this demo."); };
   $("authForm").onsubmit = e => {
     e.preventDefault();
     const u = $("user").value.trim(), p = $("pass").value;
-    if (!u || !p) return $("authErr").textContent = "Enter your username and password.";
+    if (!u || !p) return $("authErr").textContent = t("Enter your username and password.");
     if (signup) {
-      if (!/^\S+@\S+\.\S+$/.test($("email").value)) return $("authErr").textContent = "Enter a valid email address.";
-      if (p.length < 6) return $("authErr").textContent = "Use a password with at least 6 characters.";
-      if (p !== $("conf").value) return $("authErr").textContent = "Passwords don’t match.";
+      if (!/^\S+@\S+\.\S+$/.test($("email").value)) return $("authErr").textContent = t("Enter a valid email address.");
+      if (p.length < 6) return $("authErr").textContent = t("Use a password with at least 6 characters.");
+      if (p !== $("conf").value) return $("authErr").textContent = t("Passwords don’t match.");
     }
     $("auth").hidden = true; $("shop").hidden = false; render();
   };
@@ -276,13 +411,13 @@
       (!q || (i.name + " " + i.desc).toLowerCase().includes(q)));
     if (s === "low") list.sort((a, b) => a.price - b.price);
     if (s === "high") list.sort((a, b) => b.price - a.price);
-    $("count").textContent = list.length + (list.length === 1 ? " item" : " items");
+    $("count").textContent = list.length + " " + t(list.length === 1 ? "item" : "items");
     $("list").innerHTML = list.length ? list.map(i => `
       <button class="item ${i.status === "sold" ? "sold" : ""}" data-id="${i.id}">
         <span class="thumb" aria-hidden="true">${i.icon}</span>
-        <span class="info"><strong>${i.name}</strong><small>${i.desc}</small>${tag(i)}</span>
-        <span class="price">${money(i.price)}<small>${i.status === "sold" ? "Not available" : "Free delivery over $500"}</small></span>
-      </button>`).join("") : "<p>No items match. Try a different filter or search.</p>";
+        <span class="info"><strong>${i.name}</strong><small>${t(i.desc)}</small>${tag(i)}</span>
+        <span class="price">${money(i.price)}<small>${t(i.status === "sold" ? "Not available" : "Free delivery over $500")}</small></span>
+      </button>`).join("") : `<p>${t("No items match. Try a different filter or search.")}</p>`;
     $("list").querySelectorAll(".item").forEach(b => b.onclick = () => openDetail(b.dataset.id));
     $("cartCount").textContent = Object.values(cart).reduce((a, n) => a + n, 0);
   }
@@ -291,19 +426,22 @@
   /* ---------- Detail ---------- */
   function fillSize() {
     const u = $("units").value, f = u === "cm" ? 2.54 : 1;
-    $("dSize").textContent = current.dims.map(d => Math.round(d * f)).join(" × ") + " " + u + " (W × D × H)";
+    $("dSize").textContent = current.dims.map(d => Math.round(d * f)).join(" × ") + " " + u + " " + t("(W × D × H)");
   }
   function openDetail(id) {
     current = ITEMS.find(i => i.id === id); zoomed = false;
     $("dImg").style.transform = "scale(1)";
+    fillDetail();
+    $("detail").showModal();
+  }
+  function fillDetail() {
     $("dName").textContent = current.name; $("dImg").textContent = current.icon;
     $("dNo").textContent = current.id; $("dPrice").textContent = money(current.price);
-    $("dMat").textContent = current.mat; $("dStatus").innerHTML = tag(current);
+    $("dMat").textContent = t(current.mat); $("dStatus").innerHTML = tag(current);
     fillSize();
     const sold = current.status === "sold";
     $("addBtn").disabled = sold;
-    $("addBtn").textContent = sold ? "Unavailable" : "Add to cart";
-    $("detail").showModal();
+    $("addBtn").textContent = t(sold ? "Unavailable" : "Add to cart");
   }
   $("zoom").onclick = () => { zoomed = !zoomed; $("dImg").style.transform = zoomed ? "scale(1.4)" : "scale(1)"; };
   $("addBtn").onclick = () => { cart[current.id] = (cart[current.id] || 0) + 1; $("detail").close(); render(); openCart(); };
@@ -319,13 +457,13 @@
         <span class="thumb" aria-hidden="true">${i.icon}</span>
         <span class="info"><strong>${i.name}</strong>${tag(i)}</span>
         <span class="qty">
-          <button data-a="minus" data-id="${id}" aria-label="Remove one ${i.name}">−</button>
+          <button data-a="minus" data-id="${id}" aria-label="${t("Remove one")} ${i.name}">−</button>
           <span aria-live="polite">${cart[id]}</span>
-          <button data-a="plus" data-id="${id}" aria-label="Add one ${i.name}">+</button>
+          <button data-a="plus" data-id="${id}" aria-label="${t("Add one")} ${i.name}">+</button>
         </span>
         <strong>${money(i.price * cart[id])}</strong>
       </div>`;
-    }).join("") : "<p>Your cart is empty. Pick a piece from the catalog to start.</p>";
+    }).join("") : `<p>${t("Your cart is empty. Pick a piece from the catalog to start.")}</p>`;
     $("cartLines").querySelectorAll("button").forEach(b => b.onclick = () => {
       const id = b.dataset.id;
       cart[id] += b.dataset.a === "plus" ? 1 : -1;
@@ -342,19 +480,29 @@
   $("coForm").onsubmit = e => {
     e.preventDefault();
     const ids = ["sName","sAddr","sZip","sState","pName","pAddr","pCard","pExp"];
-    if (ids.some(id => !$(id).value.trim())) return $("coErr").textContent = "Fill in every shipping and payment field.";
-    if (!/^\d{5}$/.test($("sZip").value.trim())) return $("coErr").textContent = "Enter a 5-digit zip code.";
-    if (!/^\d{13,19}$/.test($("pCard").value.replace(/\s/g, ""))) return $("coErr").textContent = "Enter a valid card number (digits only).";
-    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test($("pExp").value.trim())) return $("coErr").textContent = "Enter the expiration date as MM/YY.";
+    if (ids.some(id => !$(id).value.trim())) return $("coErr").textContent = t("Fill in every shipping and payment field.");
+    if (!/^\d{5}$/.test($("sZip").value.trim())) return $("coErr").textContent = t("Enter a 5-digit zip code.");
+    if (!/^\d{13,19}$/.test($("pCard").value.replace(/\s/g, ""))) return $("coErr").textContent = t("Enter a valid card number (digits only).");
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test($("pExp").value.trim())) return $("coErr").textContent = t("Enter the expiration date as MM/YY.");
     const n = "LS-" + Math.floor(100000 + Math.random() * 900000);
-    $("doneMsg").textContent = "Order " + n + " for " + money(total()) + " is confirmed. A receipt will go to your email.";
+    $("doneMsg").textContent = t("Order {n} for {total} is confirmed. A receipt will go to your email.").replace("{n}", n).replace("{total}", money(total()));
     cart = {}; $("coForm").reset(); $("checkout").close(); render(); $("done").showModal();
   };
 
   /* ---------- Close buttons ---------- */
   document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest("dialog").close());
 
+  $("lang").onchange = e => {
+    lang = e.target.value;
+    setAuthMode(signup); $("coErr").textContent = "";
+    render();
+    if ($("detail").open && current) fillDetail();
+    if ($("cart").open) renderCart();
+    translatePage();
+  };
+
   setAuthMode(false);
+  translatePage(); // tags the original English text so it can be switched later
 </script>
 </body>
 </html>
